@@ -5,7 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Luyện Phát Âm Tiếng Trung</title>
 
-<style>
+<style> 
+    .logo{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.flag{
+    font-size:40px;
+}
+
+.logo h1{
+    margin:0;
+    color:#444;
+}
+
+.goal{
+    background:#f7f7f7;
+    border:2px solid #e0e0e0;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:20px;
+}
+
+.goal h3{
+    color:#333;
+    margin-bottom:5px;
+}
+
+.goal p{
+    color:#666;
+}
 *{
     margin:0;
     padding:0;
@@ -97,8 +130,21 @@ button:hover{
 
 <div class="container">
 
-    <h1>Lâm Huỳnh Thảo Trang</h1>
-    <h2>Luyện Phát Âm Tiếng Trung</h2>
+   <div class="logo">
+    <span class="flag">🇨🇳</span>
+    <h1>Kaoshi Chinese</h1>
+</div>
+
+<p style="margin-bottom:15px;color:#666;font-size:18px;">
+    Lâm Huỳnh Thảo Trang
+</p>
+
+<div class="goal">
+    <h3>🇨🇳 Kaoshi Chinese</h3>
+    <p>🎯 Mục tiêu: Hoàn thành 10 câu phát âm hôm nay</p>
+</div>
+
+<h2>Luyện Phát Âm Tiếng Trung</h2>
 
     <div class="chinese" id="hanzi">你好</div>
     <div class="pinyin" id="pinyin">nǐ hǎo</div>
