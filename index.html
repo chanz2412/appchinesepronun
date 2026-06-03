@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng Dụng Luyện Phát Âm Tiếng Trung</title>
+    <style>
+        /* Toàn bộ giao diện dùng tone Trắng - Xám tối giản */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #555555;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        /* Vùng hiển thị từ vựng */
+        .card {
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .pinyin {
+            font-size: 1.2rem;
+            color: #888888;
+            margin: 0 0 5px 0;
+            letter-spacing: 1px;
+        }
+
+        .chinese {
+            font-size: 3rem;
+            color: #222222;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .vietsub {
+            font-size: 1.1rem;
+            color: #666666;
+            margin: 5px 0 0 0;
+            font-style: italic;
+        }
+
+        /* Nút bấm điều khiển */
+        .btn-mic {
+            background-color: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-mic:hover {
+            background-color: #555555;
+        }
+
+        .btn-mic:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Trạng thái và Meme */
+        .status-text {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #777777;
+            height: 20px;
+        }
+
+        .meme-box {
+            margin-top: 20px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .meme-img {
+            max-height: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            display: none;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Nút chuyển bài giấu nhẹm bên dưới */
+        .next-link {
+            margin-top: 20px;
+            display: inline-block;
+            color: #888888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .next-link:hover { color: #333333; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>KaoShi Chinese 🎯</h1>
+    
+    <!-- Khu vực hiển thị từ tiếng Trung -->
+    <div class="card">
+        <p class="pinyin" id="pinyin">Nǐ hǎo</p>
+        <div class="chinese" id="chinese">你好</div>
+        <p class="vietsub" id="vietsub">Xin chào</p>
+    </div>
+
+    <!-- Nút kích hoạt Micro -->
+    <button class="btn-mic" id="micBtn">Nhấn để nói 🎙️</button>
+    <p class="status-text" id="status">Bấm nút và đọc to từ phía trên nhé!</p>
+
+    <!-- Khu vực hiển thị Meme kết quả -->
+    <div class="meme-box">
+        <img src="" alt="Meme kết quả" id="memeImg" class="meme-img">
+    </div>
+
+    <div class="next-link" id="nextBtn">Đổi từ ngẫu nhiên ➡️</div>
+</div>
+
+<script>
+    // Danh sách dữ liệu từ vựng mẫu
+    const wordList = [
+        { hanzi: "你好", pinyin: "Nǐ hǎo", translation: "Xin chào" },
+        { hanzi: "谢谢", pinyin: "Xièxie", translation: "Cảm ơn" },
+        { hanzi: "再见", pinyin: "Zàijiàn", translation: "Tạm biệt" },
+        { hanzi: "我爱你", pinyin: "Wǒ ài nǐ", translation: "Tôi yêu bạn" },
+        { hanzi: "冰淇淋", pinyin: "Bīngqílín", translation: "Kem / Bing Chilling" },
+        { hanzi: "中国", pinyin: "Zhōngguó", translation: "Trung Quốc" }
+    ];
+
+    // Kho ảnh Meme online (Có thể thay thế link bằng ảnh của riêng bạn)
+    const memes = {
+        success: [
+            "https://i.postimg.co/2S6g8N3k/success-meme.jpg", // Meme cười vừa lòng / thumbs up
+            "https://api.memegen.link/images/ack/Great_Job/You_did_it.png"
+        ],
+        fail: [
+            "https://i.postimg.co/8C8g0mS4/angry-meme.jpg", // Meme tức giận / phán xét
+            "https://api.memegen.link/images/blam/Wrong_Pronunciation/Try_Again.png"
+        ]
+    };
+
+    let currentWord = wordList[0];
+    const micBtn = document.getElementById('micBtn');
+    const statusText = document.getElementById('status');
+    const memeImg = document.getElementById('memeImg');
+
+    // Hàm đổi từ ngẫu nhiên
+    function loadNewWord() {
+        const randomIndex = Math.floor(Math.random() * wordList.length);
+        currentWord = wordList[randomIndex];
+        document.getElementById('chinese').innerText = currentWord.hanzi;
+        document.getElementById('pinyin').innerText = currentWord.pinyin;
+        document.getElementById('vietsub').innerText = currentWord.translation;
+        
+        // Ẩn meme cũ
+        memeImg.style.display = 'none';
+        statusText.innerText = "Bấm nút và đọc to từ phía trên nhé!";
+        statusText.style.color = "#777777";
+    }
+
+    document.getElementById('nextBtn').addEventListener('click', loadNewWord);
+
+    // Cấu hình nhận diện giọng nói (Web Speech API)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        statusText.innerText = "Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome!";
+        micBtn.disabled = true;
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN'; // Nhận diện tiếng Trung phổ thông
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        micBtn.addEventListener('click', () => {
+            recognition.start();
+            micBtn.innerText = "Đang lắng nghe... 👂";
+            statusText.innerText = "Hãy nói ngay bây giờ...";
+            statusText.style.color = "#333333";
+            memeImg.style.display = 'none';
+        });
+
+        recognition.onresult = (event) => {
+            const resultText = event.results[0][0].transcript;
+            micBtn.innerText = "Nhấn để nói 🎙️";
+            
+            // Chuẩn hóa chuỗi để so sánh chính xác (bỏ khoảng trắng, dấu câu)
+            const cleanResult = resultText.trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！]/g,"");
+            const cleanTarget = currentWord.hanzi.trim();
+
+            if (cleanResult === cleanTarget) {
+                // ĐÚNG: Hiện chữ xanh + meme hài hước/khen ngợi
+                statusText.innerText = `Chính xác! Bạn nói: "${resultText}" (100đ)`;
+                statusText.style.color = "#2e7d32";
+                
+                const randomSuccessMeme = memes.success[Math.floor(Math.random() * memes.success.length)];
+                memeImg.src = randomSuccessMeme;
+                memeImg.style.display = 'block';
+            } else {
+                // SẠI: Hiện chữ đỏ + meme tức giận/bất lực
+                statusText.innerText = `Sai rồi! Máy nghe thành: "${resultText}". Hãy thử lại!`;
+                statusText.style.color = "#c62828";
+
+                const randomFailMeme = memes.fail[Math.floor(Math.random() * memes.fail.length)];
+                memeImg.src = randomFailMeme;
+                memeImg.style.display = 'block';
+            }
+        };
+
+        recognition.onerror = (event) => {
+            micBtn.innerText = "Nhấn để nói 🎙️";
+            statusText.innerText = "Không nghe rõ, vui lòng bấm nút thử lại!";
+            statusText.style.color = "#c62828";
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+    }
+</script>
+
+</body>
+</html>
